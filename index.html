@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>筆記管理系統</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="appView" class="workspace" aria-label="筆記管理工作區">
+        <aside class="sidebar">
+          <div class="brand-row">
+            <div>
+              <p class="eyebrow">Local Notes</p>
+              <h2>筆記工作台</h2>
+            </div>
+          </div>
+
+          <button id="newNoteBtn" class="primary-button" type="button">+ 新增筆記</button>
+
+          <div class="filter-stack">
+            <label for="searchInput">搜尋筆記</label>
+            <input id="searchInput" type="search" placeholder="搜尋標題或內容" />
+
+            <label for="categoryFilter">分類篩選</label>
+            <select id="categoryFilter">
+              <option value="all">全部分類</option>
+            </select>
+
+            <label for="statusFilter">快速篩選</label>
+            <select id="statusFilter">
+              <option value="all">全部筆記</option>
+              <option value="favorite">收藏筆記</option>
+              <option value="pinned">置頂筆記</option>
+            </select>
+          </div>
+
+          <div class="stats-grid">
+            <div>
+              <span id="totalCount">0</span>
+              <small>總筆記</small>
+            </div>
+            <div>
+              <span id="favoriteCount">0</span>
+              <small>收藏</small>
+            </div>
+          </div>
+
+          <div class="utility-row">
+            <label class="theme-control" for="themeSelect">
+              <span>主題顏色</span>
+              <select id="themeSelect">
+                <option value="warm">暖木色</option>
+                <option value="forest">森林綠</option>
+                <option value="ocean">海洋藍</option>
+                <option value="rose">玫瑰粉</option>
+                <option value="graphite">石墨灰</option>
+              </select>
+            </label>
+            <button id="exportBtn" class="ghost-button" type="button">匯出筆記</button>
+          </div>
+        </aside>
+
+        <section class="note-list-panel" aria-labelledby="listTitle">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Notes</p>
+              <h2 id="listTitle">筆記列表</h2>
+            </div>
+            <button id="seedBtn" class="ghost-button" type="button">重置展示資料</button>
+          </div>
+          <div id="noteList" class="note-list"></div>
+          <div id="emptyState" class="empty-state is-hidden">
+            <h3>目前沒有符合條件的筆記</h3>
+            <p>可以新增一筆，或調整搜尋與分類條件。</p>
+          </div>
+        </section>
+
+        <section class="editor-panel" aria-labelledby="editorTitle">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Editor</p>
+              <h2 id="editorTitle">編輯筆記</h2>
+            </div>
+            <span id="saveStatus" class="save-status">尚未儲存</span>
+          </div>
+
+          <form id="noteForm" class="note-form">
+            <input id="noteId" type="hidden" />
+
+            <label for="noteTitle">標題 <span>*</span></label>
+            <input id="noteTitle" type="text" placeholder="輸入筆記標題" required />
+            <p id="titleError" class="field-error is-hidden">標題不可空白。</p>
+
+            <label for="noteCategory">分類</label>
+            <input id="noteCategory" type="text" list="categoryOptions" placeholder="例如：課程、專案、生活" />
+            <datalist id="categoryOptions"></datalist>
+
+            <label for="noteTags">標籤</label>
+            <input id="noteTags" type="text" placeholder="用逗號分隔，例如：JavaScript, 期末" />
+
+            <label for="noteContent">內容</label>
+            <textarea id="noteContent" rows="10" placeholder="寫下重點、待辦或課堂筆記"></textarea>
+
+            <div class="toggle-row">
+              <label class="check-label">
+                <input id="noteFavorite" type="checkbox" />
+                收藏
+              </label>
+              <label class="check-label">
+                <input id="notePinned" type="checkbox" />
+                置頂
+              </label>
+            </div>
+
+            <div class="action-row">
+              <button class="primary-button" type="submit">儲存筆記</button>
+              <button id="deleteBtn" class="danger-button" type="button">刪除</button>
+              <button id="clearFormBtn" class="ghost-button" type="button">清空</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
