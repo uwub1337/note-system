@@ -111,8 +111,8 @@ function saveNotes() {
 }
 
 function applyTheme(theme) {
-  const availableThemes = ["warm", "forest", "ocean", "rose", "graphite"];
-  const nextTheme = availableThemes.includes(theme) ? theme : "warm";
+  const availableThemes = ["graphite", "midnight"];
+  const nextTheme = availableThemes.includes(theme) ? theme : "graphite";
   document.body.dataset.theme = nextTheme;
   elements.themeSelect.value = nextTheme;
   localStorage.setItem(STORAGE_KEYS.theme, nextTheme);
@@ -394,7 +394,7 @@ function bindEvents() {
 
 function init() {
   state.notes = loadNotes();
-  applyTheme(localStorage.getItem(STORAGE_KEYS.theme) || "warm");
+  applyTheme(localStorage.getItem(STORAGE_KEYS.theme) || "graphite");
   elements.deleteBtn.disabled = true;
   bindEvents();
   renderAll();
