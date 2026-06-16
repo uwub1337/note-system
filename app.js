@@ -86,6 +86,7 @@ const elements = {
   redoBtn: document.querySelector("#redoBtn"),
   highlightButtons: document.querySelectorAll("[data-highlight]"),
   textColorButtons: document.querySelectorAll("[data-text-color]"),
+  formatButtons: document.querySelectorAll("[data-format]"),
 };
 
 function escapeHtml(value) {
@@ -134,7 +135,7 @@ function sanitizeEditorHtml(rawHtml) {
     }
 
     if (tagName === "span") {
-      const allowedClasses = [
+      const colorClasses = [
         "text-red",
         "text-orange",
         "text-yellow",
@@ -147,8 +148,9 @@ function sanitizeEditorHtml(rawHtml) {
         "text-black",
         "text-white",
       ];
-      const nextClass = allowedClasses.find((className) => node.classList.contains(className));
-      return nextClass ? `<span class="${nextClass}">${childHtml}</span>` : childHtml;
+      const formatClasses = ["fmt-bold", "fmt-italic", "fmt-strike"];
+      const nextClasses = [...colorClasses, ...formatClasses].filter((className) => node.classList.contains(className));
+      return nextClasses.length ? `<span class="${nextClasses.join(" ")}">${childHtml}</span>` : childHtml;
     }
 
     return childHtml;
@@ -691,6 +693,36 @@ function applyTextColor(color) {
   queueAutoSave();
 }
 
+function applyInlineFormat(format) {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+
+  const range = selection.getRangeAt(0);
+  if (!elements.noteContent.contains(range.commonAncestorContainer)) return;
+
+  const formatMap = {
+    bold: "fmt-bold",
+    italic: "fmt-italic",
+    strike: "fmt-strike",
+  };
+  const className = formatMap[format];
+  if (!className) return;
+
+  const span = document.createElement("span");
+  span.className = className;
+
+  try {
+    range.surroundContents(span);
+  } catch {
+    const fragment = range.extractContents();
+    span.appendChild(fragment);
+    range.insertNode(span);
+  }
+
+  selection.removeAllRanges();
+  queueAutoSave();
+}
+
 function bindEvents() {
   elements.sidebarCollapseBtn.addEventListener("click", () => {
     applyPanelState("sidebar", !elements.appView.classList.contains("sidebar-collapsed"));
@@ -730,6 +762,10 @@ function bindEvents() {
 
   elements.textColorButtons.forEach((button) => {
     button.addEventListener("click", () => applyTextColor(button.dataset.textColor));
+  });
+
+  elements.formatButtons.forEach((button) => {
+    button.addEventListener("click", () => applyInlineFormat(button.dataset.format));
   });
 
   elements.searchInput.addEventListener("input", (event) => {

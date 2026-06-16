@@ -610,6 +610,21 @@ body[data-theme="midnight"] .badge.warn {
   background: linear-gradient(135deg, #ffffff 0%, #dfe6eb 100%);
 }
 
+.format-button {
+  min-width: 30px;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  padding: 4px 8px;
+  font-weight: 900;
+}
+
+.format-button:hover {
+  background: var(--panel-strong);
+}
+
 .tag-preview {
   display: flex;
   flex-wrap: wrap;
@@ -706,6 +721,18 @@ body[data-theme="midnight"] .badge.warn {
 
 body[data-theme="graphite"] .rich-editor .text-white {
   color: #eef3f6;
+}
+
+.rich-editor .fmt-bold {
+  font-weight: 900;
+}
+
+.rich-editor .fmt-italic {
+  font-style: italic;
+}
+
+.rich-editor .fmt-strike {
+  text-decoration: line-through;
 }
 
 mark.hl-yellow {
