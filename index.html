@@ -8,6 +8,7 @@
   </head>
   <body>
     <main class="app-shell">
+      <!-- 左側工作台：提供篩選、新增、主題切換與匯出功能。 -->
       <section id="appView" class="workspace" aria-label="筆記管理工作區">
         <aside class="sidebar">
           <div class="brand-row">
@@ -59,6 +60,7 @@
           </div>
         </aside>
 
+        <!-- 中間區塊：顯示可搜尋的筆記列表與展示資料重置。 -->
         <section class="note-list-panel" aria-labelledby="listTitle">
           <div class="panel-head">
             <div>
@@ -78,13 +80,18 @@
           </div>
         </section>
 
+        <!-- 右側編輯器：提供富文字編輯、自動儲存與格式工具。 -->
         <section class="editor-panel" aria-labelledby="editorTitle">
           <div class="panel-head">
             <div>
               <p class="eyebrow">Editor</p>
               <h2 id="editorTitle">編輯筆記</h2>
             </div>
-            <span id="saveStatus" class="save-status">尚未儲存</span>
+            <div class="editor-head-actions">
+              <span id="saveStatus" class="save-status">尚未儲存</span>
+              <button id="aiSummaryBtn" class="ghost-button" type="button">AI 摘要</button>
+              <button id="fullscreenBtn" class="ghost-button icon-button" type="button" title="全螢幕" aria-label="全螢幕">⛶</button>
+            </div>
           </div>
 
           <div class="toolbar-group compact-history" aria-label="編輯工具">
@@ -171,9 +178,38 @@
             </div>
           </form>
         </section>
+
+        <section id="summaryPanel" class="summary-panel is-hidden" aria-labelledby="summaryTitle" aria-modal="true" role="dialog">
+          <div class="summary-card">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">AI Summary</p>
+                <h2 id="summaryTitle">AI 摘要筆記</h2>
+              </div>
+              <button id="summaryCloseBtn" class="ghost-button icon-button" type="button" title="關閉" aria-label="關閉">×</button>
+            </div>
+
+            <div class="summary-body">
+              <p class="summary-hint">選擇要摘要的筆記。若右側正在編輯某篇筆記，會自動先勾選它。</p>
+              <div id="summaryNotePicker" class="summary-note-picker"></div>
+              <p id="summaryError" class="field-error is-hidden">請選擇筆記。</p>
+
+              <div class="action-row">
+                <button id="summaryRunBtn" class="primary-button" type="button">產生摘要</button>
+                <button id="summarySelectCurrentBtn" class="ghost-button" type="button">選目前筆記</button>
+              </div>
+
+              <label for="summaryOutput">摘要結果</label>
+              <div id="summaryOutput" class="summary-output markdown-output" role="region" aria-live="polite">
+                AI 摘要會顯示在這裡
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
     </main>
 
-    <script src="./app.js"></script>
-  </body>
+  <script src="./app.js"></script>
+  <script src="./summary-rerun.js"></script>
+</body>
 </html>

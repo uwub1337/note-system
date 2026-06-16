@@ -15,6 +15,7 @@ body[data-theme="graphite"] {
   --shadow: 0 20px 60px rgba(42, 54, 61, 0.14);
 }
 
+/* 深灰主題色票，由太陽/月亮按鈕切換。 */
 body[data-theme="midnight"] {
   --bg: #15181b;
   --bg-deep: #0f1215;
@@ -185,6 +186,7 @@ body[data-theme="midnight"] .ghost-button:hover {
   padding: 18px;
 }
 
+/* 左側收合時保留小按鈕，同時釋放更多編輯空間。 */
 .workspace.sidebar-collapsed {
   --sidebar-width: 86px;
 }
@@ -445,6 +447,7 @@ body[data-theme="midnight"] .badge.warn {
   }
 }
 
+/* 小螢幕時改成單欄排列，避免內容被擠壓。 */
 @media (max-width: 760px) {
   .workspace {
     grid-template-columns: 1fr;
@@ -468,6 +471,7 @@ body[data-theme="midnight"] .badge.warn {
   padding: 8px 12px;
 }
 
+/* 富文字工具：上一步/下一步、螢光筆、字色與文字格式。 */
 .icon-button {
   min-width: 42px;
   min-height: 38px;
@@ -653,6 +657,7 @@ body[data-theme="midnight"] .badge.warn {
   color: var(--muted);
 }
 
+/* 特殊標籤色彩，讓重要、完成、學習等標籤更容易辨識。 */
 .tag-chip-important {
   background: rgba(210, 76, 76, 0.18);
   color: #b22d2d;
@@ -797,6 +802,158 @@ body[data-theme="midnight"] .tag-chip-study {
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+.editor-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editor-panel.fullscreen-editor {
+  position: fixed;
+  inset: 12px;
+  z-index: 20;
+  min-height: auto;
+  border-radius: 8px;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.32);
+}
+
+body.editor-fullscreen-active {
+  overflow: hidden;
+}
+
+body.editor-fullscreen-active::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.editor-panel.fullscreen-editor .rich-editor {
+  min-height: min(56vh, 620px);
+}
+
+.summary-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.48);
+}
+
+.summary-card {
+  width: min(760px, 100%);
+  max-height: min(820px, calc(100vh - 36px));
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.34);
+}
+
+.summary-body {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.summary-hint {
+  margin: 0;
+  color: var(--muted);
+}
+
+.summary-note-picker {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-strong);
+}
+
+.summary-note-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.summary-note-option input {
+  width: auto;
+}
+
+.summary-note-option span {
+  font-weight: 900;
+}
+
+.summary-output {
+  min-height: 180px;
+}
+
+.markdown-output {
+  width: 100%;
+  min-height: 220px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  line-height: 1.85;
+  white-space: normal;
+  overflow: auto;
+}
+
+.markdown-output h3,
+.markdown-output h4,
+.markdown-output h5 {
+  margin: 18px 0 10px;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.markdown-output h3:first-child,
+.markdown-output h4:first-child,
+.markdown-output h5:first-child {
+  margin-top: 0;
+}
+
+.markdown-output p {
+  margin: 8px 0;
+}
+
+.markdown-output ul {
+  margin: 8px 0 14px 1.25rem;
+  padding: 0;
+}
+
+.markdown-output li {
+  margin: 6px 0;
+}
+
+.markdown-output strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.markdown-output hr {
+  margin: 16px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.markdown-output input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  vertical-align: -2px;
 }
 
 .theme-toggle {

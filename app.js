@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   sidebarCollapsed: "noteSystem.sidebarCollapsed",
 };
 
+// 首次開啟時提供展示資料，讓畫面不會是空的。
 const demoNotes = [
   {
     id: "note-demo-1",
@@ -52,6 +53,7 @@ const state = {
   isApplyingSnapshot: false,
 };
 
+// 集中管理頁面元素，方便後面綁定事件與更新畫面。
 const elements = {
   appView: document.querySelector("#appView"),
   sidebarCollapseBtn: document.querySelector("#sidebarCollapseBtn"),
@@ -84,6 +86,15 @@ const elements = {
   titleError: document.querySelector("#titleError"),
   undoBtn: document.querySelector("#undoBtn"),
   redoBtn: document.querySelector("#redoBtn"),
+  aiSummaryBtn: document.querySelector("#aiSummaryBtn"),
+  summaryPanel: document.querySelector("#summaryPanel"),
+  summaryCloseBtn: document.querySelector("#summaryCloseBtn"),
+  summaryNotePicker: document.querySelector("#summaryNotePicker"),
+  summaryError: document.querySelector("#summaryError"),
+  summaryRunBtn: document.querySelector("#summaryRunBtn"),
+  summarySelectCurrentBtn: document.querySelector("#summarySelectCurrentBtn"),
+  summaryOutput: document.querySelector("#summaryOutput"),
+  fullscreenBtn: document.querySelector("#fullscreenBtn"),
   highlightButtons: document.querySelectorAll("[data-highlight]"),
   textColorButtons: document.querySelectorAll("[data-text-color]"),
   formatButtons: document.querySelectorAll("[data-format]"),
@@ -98,6 +109,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+// 只保留本系統允許的富文字標籤與 class，避免儲存不可預期的 HTML。
 function sanitizeEditorHtml(rawHtml) {
   const container = document.createElement("div");
   container.innerHTML = rawHtml || "";
@@ -163,12 +175,87 @@ function sanitizeEditorHtml(rawHtml) {
     .trim();
 }
 
+// 搜尋與匯出需要純文字，即使內容有螢光筆、字色或格式。
 function htmlToPlainText(html) {
   const container = document.createElement("div");
   container.innerHTML = html || "";
   return (container.textContent || "").replace(/\s+/g, " ").trim();
 }
 
+function renderInlineMarkdown(text) {
+  return escapeHtml(text)
+    .replace(/\$\\rightarrow\$/g, "→")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+
+function renderMarkdown(markdown) {
+  const lines = String(markdown || "").split(/\r?\n/);
+  const output = [];
+  let isListOpen = false;
+
+  function closeList() {
+    if (isListOpen) {
+      output.push("</ul>");
+      isListOpen = false;
+    }
+  }
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      closeList();
+      return;
+    }
+
+    if (/^---+$/.test(trimmed)) {
+      closeList();
+      output.push("<hr>");
+      return;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    if (headingMatch) {
+      closeList();
+      const level = headingMatch[1].length + 2;
+      output.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
+      return;
+    }
+
+    const taskMatch = trimmed.match(/^[*-]\s+\[\s?([xX]?)\s?\]\s+(.+)$/);
+    if (taskMatch) {
+      if (!isListOpen) {
+        output.push("<ul>");
+        isListOpen = true;
+      }
+      const checked = taskMatch[1] ? " checked" : "";
+      output.push(`<li><input type="checkbox" disabled${checked}> ${renderInlineMarkdown(taskMatch[2])}</li>`);
+      return;
+    }
+
+    const bulletMatch = trimmed.match(/^[*-]\s+(.+)$/);
+    if (bulletMatch) {
+      if (!isListOpen) {
+        output.push("<ul>");
+        isListOpen = true;
+      }
+      output.push(`<li>${renderInlineMarkdown(bulletMatch[1])}</li>`);
+      return;
+    }
+
+    closeList();
+    output.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+  });
+
+  closeList();
+  return output.join("");
+}
+
+function setSummaryOutput(markdown) {
+  elements.summaryOutput.innerHTML = renderMarkdown(markdown);
+}
+
+// 舊資料可能缺少欄位，使用前先補齊成統一格式。
 function normalizeNote(note) {
   const now = new Date().toISOString();
   return {
@@ -204,6 +291,7 @@ function saveNotes() {
   localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(state.notes));
 }
 
+// 主題偏好會存在本機，重新整理後仍保留。
 function applyTheme(theme) {
   const availableThemes = ["graphite", "midnight"];
   const nextTheme = availableThemes.includes(theme) ? theme : "graphite";
@@ -255,6 +343,7 @@ function getTagClass(tag) {
   return "";
 }
 
+// 即時預覽標籤，並替常見標籤套用特殊顏色。
 function renderTagPreview() {
   const tags = parseTags(elements.noteTags.value);
   elements.tagPreview.innerHTML = "";
@@ -291,6 +380,7 @@ function syncHistoryButtons() {
   elements.redoBtn.disabled = state.future.length === 0;
 }
 
+// 在刪除或自動儲存前保存快照，提供上一步/下一步使用。
 function pushHistorySnapshot() {
   if (state.isApplyingSnapshot) return;
   state.history.push({
@@ -302,6 +392,7 @@ function pushHistorySnapshot() {
   syncHistoryButtons();
 }
 
+// 還原某次快照，並同步刷新列表與編輯器畫面。
 function applySnapshot(snapshot) {
   state.isApplyingSnapshot = true;
   clearTimeout(state.autoSaveTimer);
@@ -407,6 +498,7 @@ function makeNoteCard(note) {
   return card;
 }
 
+// 篩選會同時考慮關鍵字、分類、收藏與置頂狀態。
 function getFilteredNotes() {
   const keyword = state.search.trim().toLowerCase();
 
@@ -506,6 +598,7 @@ function clearForm(shouldFocus = true) {
   if (shouldFocus) elements.noteTitle.focus();
 }
 
+// 延遲一小段時間再儲存，避免每打一個字就立刻寫入。
 function queueAutoSave() {
   if (state.isApplyingSnapshot) return;
   clearTimeout(state.autoSaveTimer);
@@ -513,6 +606,7 @@ function queueAutoSave() {
   state.autoSaveTimer = setTimeout(commitAutoSave, 500);
 }
 
+// 編輯器有有效內容時，自動新增或更新筆記。
 function commitAutoSave() {
   if (state.isApplyingSnapshot) return;
 
@@ -649,6 +743,7 @@ function handleEditorPaste(event) {
   document.execCommand("insertText", false, text);
 }
 
+// 對選取的文字套用螢光筆效果。
 function applyHighlight(color) {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
@@ -671,6 +766,7 @@ function applyHighlight(color) {
   queueAutoSave();
 }
 
+// 對選取的文字套用字色。
 function applyTextColor(color) {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
@@ -693,6 +789,7 @@ function applyTextColor(color) {
   queueAutoSave();
 }
 
+// 對選取的文字套用粗體、斜體、刪除線等格式。
 function applyInlineFormat(format) {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
@@ -723,6 +820,99 @@ function applyInlineFormat(format) {
   queueAutoSave();
 }
 
+function renderSummaryPicker() {
+  elements.summaryNotePicker.innerHTML = "";
+
+  state.notes.forEach((note) => {
+    const label = document.createElement("label");
+    label.className = "summary-note-option";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = note.id;
+    checkbox.checked = note.id === state.selectedId;
+
+    const title = document.createElement("span");
+    title.textContent = note.title;
+
+    label.append(checkbox, title);
+    elements.summaryNotePicker.append(label);
+  });
+}
+
+function openSummaryPanel() {
+  renderSummaryPicker();
+  setSummaryOutput("AI 摘要會顯示在這裡");
+  elements.summaryError.classList.toggle("is-hidden", Boolean(state.selectedId));
+  elements.summaryPanel.classList.remove("is-hidden");
+}
+
+function closeSummaryPanel() {
+  elements.summaryPanel.classList.add("is-hidden");
+}
+
+function getSelectedSummaryNotes() {
+  const selectedIds = [...elements.summaryNotePicker.querySelectorAll("input:checked")].map((input) => input.value);
+  return state.notes.filter((note) => selectedIds.includes(note.id));
+}
+
+function selectCurrentSummaryNote() {
+  renderSummaryPicker();
+  if (!state.selectedId) {
+    elements.summaryError.textContent = "請選擇筆記。";
+    elements.summaryError.classList.remove("is-hidden");
+    return;
+  }
+  elements.summaryError.classList.add("is-hidden");
+}
+
+async function runAiSummary() {
+  const selectedNotes = getSelectedSummaryNotes();
+
+  if (selectedNotes.length === 0) {
+    elements.summaryError.textContent = "請選擇筆記。";
+    elements.summaryError.classList.remove("is-hidden");
+    return;
+  }
+
+  elements.summaryError.classList.add("is-hidden");
+  setSummaryOutput("AI 摘要產生中...");
+  elements.summaryRunBtn.disabled = true;
+
+  try {
+    const response = await fetch("/api/summarize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        notes: selectedNotes.map((note) => ({
+          title: note.title,
+          category: note.category,
+          tags: note.tags,
+          content: htmlToPlainText(note.content),
+        })),
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "摘要失敗，請稍後再試。");
+    setSummaryOutput(data.summary || "沒有產生摘要內容。");
+  } catch (error) {
+    setSummaryOutput(`無法產生 AI 摘要：${error.message}`);
+  } finally {
+    elements.summaryRunBtn.disabled = false;
+  }
+}
+
+function setEditorFullscreen(isFullscreen) {
+  const editorPanel = document.querySelector(".editor-panel");
+  editorPanel.classList.toggle("fullscreen-editor", isFullscreen);
+  document.body.classList.toggle("editor-fullscreen-active", isFullscreen);
+  elements.fullscreenBtn.textContent = isFullscreen ? "⤢" : "⛶";
+  elements.fullscreenBtn.title = isFullscreen ? "離開全螢幕" : "全螢幕";
+  elements.fullscreenBtn.setAttribute("aria-label", isFullscreen ? "離開全螢幕" : "全螢幕");
+}
+
+// 所有介面互動事件都集中在這裡綁定。
 function bindEvents() {
   elements.sidebarCollapseBtn.addEventListener("click", () => {
     applyPanelState("sidebar", !elements.appView.classList.contains("sidebar-collapsed"));
@@ -755,6 +945,14 @@ function bindEvents() {
 
   elements.undoBtn.addEventListener("click", undoChanges);
   elements.redoBtn.addEventListener("click", redoChanges);
+  elements.aiSummaryBtn.addEventListener("click", openSummaryPanel);
+  elements.summaryCloseBtn.addEventListener("click", closeSummaryPanel);
+  elements.summaryRunBtn.addEventListener("click", runAiSummary);
+  elements.summarySelectCurrentBtn.addEventListener("click", selectCurrentSummaryNote);
+  elements.fullscreenBtn.addEventListener("click", () => {
+    const editorPanel = document.querySelector(".editor-panel");
+    setEditorFullscreen(!editorPanel.classList.contains("fullscreen-editor"));
+  });
 
   elements.highlightButtons.forEach((button) => {
     button.addEventListener("click", () => applyHighlight(button.dataset.highlight));
@@ -784,6 +982,11 @@ function bindEvents() {
   });
 
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setEditorFullscreen(false);
+      closeSummaryPanel();
+    }
+
     const isMac = navigator.platform.toUpperCase().includes("MAC");
     const metaKey = isMac ? event.metaKey : event.ctrlKey;
     if (!metaKey) return;
@@ -800,6 +1003,7 @@ function bindEvents() {
   });
 }
 
+// 初始化頁面：讀取資料、套用主題、綁定事件並渲染畫面。
 function init() {
   state.notes = loadNotes();
   applyTheme(localStorage.getItem(STORAGE_KEYS.theme) || "graphite");
